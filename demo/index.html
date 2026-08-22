@@ -26,9 +26,11 @@
   <h1>framebudget</h1>
   <p class="note">
     Particles render at the quality the device can actually sustain. Press
-    <b>add load</b> to block the main thread on purpose — the tier drops before
-    the stutter becomes visible, and climbs back slowly once the load stops.
-    The panel at the bottom right is the HUD.
+    <b>add load</b> to block the main thread on purpose. The tier drops within
+    about a second; climbing back takes roughly <b>eight seconds per step</b>,
+    and longer for a step that has already failed once. That asymmetry is
+    deliberate: being wrong while protecting costs little, being wrong while
+    recovering costs a visible stutter. The panel at the bottom right is the HUD.
   </p>
   <canvas id="c" width="760" height="380"></canvas>
   <div class="row">
@@ -57,11 +59,29 @@ const P = Array.from({ length: COUNT.full }, () => ({
 
 const fb = new FrameBudget({
   target: 60,
-  onTierChange(tier, report) {
-    count = COUNT[tier];
-    label.textContent = `tier: ${tier} — p95 ${report.p95Ms.toFixed(1)} ms`;
-  },
+  onTierChange(tier) { count = COUNT[tier]; },
 }).start();
+
+/**
+ * The label used to be written only inside `onTierChange`, and that made
+ * recovery look broken. Frames come back the instant the load stops, but the
+ * tier does not: recovery needs 4 s of health per step, doubled for a step that
+ * has already failed once, so climbing back from `minimal` takes around
+ * sixteen seconds. During all of it the line sat there showing a p95 measured
+ * ten seconds earlier, and the honest reading of that is "nothing is happening".
+ *
+ * The slowness is the point — see the asymmetry argument in the README — so the
+ * fix is not to speed it up. It is to say what the controller is waiting for.
+ */
+function paintStatus() {
+  const r = fb.report();
+  const base = `tier: ${r.tier} — p95 ${r.p95Ms.toFixed(1)} ms`;
+  label.textContent = r.tier !== 'full' && r.missRate < 0.02
+    ? `${base} · frames healthy — holding before it climbs back`
+    : base;
+}
+setInterval(paintStatus, 250);
+paintStatus();
 
 new Hud(fb).mount();
 
