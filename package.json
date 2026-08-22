@@ -1,0 +1,30 @@
+{
+  "name": "framebudget",
+  "version": "0.1.0",
+  "description": "A runtime frame budget for animated websites. Measures what the user actually feels, and turns the animation down before they feel it.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": ["src", "types", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "types": "tsc",
+    "check": "npm run types && npm test"
+  },
+  "keywords": [
+    "performance", "animation", "requestanimationframe", "frame-rate",
+    "jank", "webgl", "adaptive-quality", "core-web-vitals", "prefers-reduced-motion"
+  ],
+  "author": "Rodrigo Figueiredo <eimaieros@gmail.com> (https://rodrigofigueiredo.dev)",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/eimaieros/framebudget.git" },
+  "homepage": "https://github.com/eimaieros/framebudget",
+  "sideEffects": false,
+  "devDependencies": { "typescript": "^5.6.0" }
+}

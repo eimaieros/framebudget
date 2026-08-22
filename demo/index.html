@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>framebudget — adaptive quality demo</title>
+<style>
+  :root{--bg:#08080a;--fg:#ececed;--dim:#777782;--acc:#ff3d1f;--line:rgba(255,255,255,.1)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--fg);font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+       min-height:100vh;display:grid;place-items:center;padding:24px}
+  canvas{display:block;border:1px solid var(--line);border-radius:4px;background:#000}
+  .wrap{display:grid;gap:16px;max-width:760px;width:100%}
+  h1{font-size:20px;letter-spacing:-.01em;font-weight:600}
+  p{color:var(--dim);max-width:62ch}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--line);
+         border-radius:999px;padding:7px 15px;cursor:pointer;transition:.25s}
+  button:hover{border-color:var(--acc);color:var(--acc)}
+  b{color:var(--acc);font-weight:600}
+  .note{border-left:2px solid var(--line);padding-left:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>framebudget</h1>
+  <p class="note">
+    Particles render at the quality the device can actually sustain. Press
+    <b>add load</b> to block the main thread on purpose — the tier drops before
+    the stutter becomes visible, and climbs back slowly once the load stops.
+    The panel at the bottom right is the HUD.
+  </p>
+  <canvas id="c" width="760" height="380"></canvas>
+  <div class="row">
+    <button id="load">add load</button>
+    <button id="clear">stop load</button>
+    <span id="tier" style="color:var(--dim)">tier: full</span>
+  </div>
+</div>
+
+<script type="module">
+import { FrameBudget, Hud } from '../src/index.js';
+
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const label = document.getElementById('tier');
+
+const COUNT = { full: 2600, reduced: 700, minimal: 120 };
+let count = COUNT.full;
+
+const P = Array.from({ length: COUNT.full }, () => ({
+  x: Math.random() * cv.width,
+  y: Math.random() * cv.height,
+  vx: (Math.random() - .5) * 1.4,
+  vy: (Math.random() - .5) * 1.4,
+}));
+
+const fb = new FrameBudget({
+  target: 60,
+  onTierChange(tier, report) {
+    count = COUNT[tier];
+    label.textContent = `tier: ${tier} — p95 ${report.p95Ms.toFixed(1)} ms`;
+  },
+}).start();
+
+new Hud(fb).mount();
+
+// Deliberate main-thread blocking, to show the controller reacting.
+let load = 0;
+document.getElementById('load').onclick = () => { load += 9; };
+document.getElementById('clear').onclick = () => { load = 0; };
+
+(function draw() {
+  if (load) {
+    const until = performance.now() + load;
+    while (performance.now() < until) { /* deliberate block */ }
+  }
+  ctx.fillStyle = 'rgba(8,8,10,.28)';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#ff3d1f';
+  for (let i = 0; i < count; i++) {
+    const p = P[i];
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0 || p.x > cv.width) p.vx *= -1;
+    if (p.y < 0 || p.y > cv.height) p.vy *= -1;
+    ctx.fillRect(p.x, p.y, 1.6, 1.6);
+  }
+  requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>
