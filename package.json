@@ -15,7 +15,8 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "types": "tsc",
-    "check": "npm run types && npm test"
+    "check": "npm run types && npm test",
+    "prepare": "npm run types"
   },
   "keywords": [
     "performance", "animation", "requestanimationframe", "frame-rate",

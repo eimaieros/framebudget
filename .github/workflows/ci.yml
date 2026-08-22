@@ -8,13 +8,24 @@ jobs:
   check:
     runs-on: ubuntu-latest
     strategy:
+      # The library has no dependencies, so what is being tested here is the
+      # runtime itself: `node:test` and the assertion API changed shape across
+      # these three majors, and 20 is the oldest release anyone still ships on.
+      fail-fast: false
       matrix:
         node: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # v5 and not v4: the v4 actions run on a Node 20 runtime that GitHub has
+      # deprecated, and every run was raising a warning for it.
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
+      # `npm ci` needs the lockfile to agree with package.json. If it ever
+      # doesn't, fall back rather than failing the run on a bookkeeping issue.
       - run: npm ci || npm install
       - run: npm test
+      # Redundant on paper — `prepare` already ran `tsc` during install — but
+      # kept explicit so a type error is reported as its own failed step
+      # instead of hiding inside the install output.
       - run: npm run types
