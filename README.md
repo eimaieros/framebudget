@@ -25,9 +25,14 @@ This library is those techniques, made measurable and automatic.
 
 ## Install
 
+Straight from the repository — no npm release yet:
+
 ```bash
-npm install framebudget
+npm install github:eimaieros/framebudget
 ```
+
+Or copy `src/` into your project. It's ES modules with no dependencies, so
+there is nothing to build.
 
 ## Use
 
@@ -196,6 +201,11 @@ npm run check # both
 vsync jitter, background suspension, single spikes, oscillation, and the
 sentinel bug where `0` was used to mean "not started" on a clock that legally
 starts at zero.
+
+The source is JavaScript; the `.d.ts` files are generated from its JSDoc by
+`tsc --emitDeclarationOnly` and are not committed — generated output kept
+beside its source is how the two end up disagreeing. `prepare` runs the
+generation on install, so a git dependency gets its types built on the way in.
 
 ---
 
