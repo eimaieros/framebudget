@@ -1,0 +1,12 @@
+# Normalise line endings in the repository.
+#
+# Without this, cloning on Windows and committing back rewrites every file from
+# LF to CRLF, and the next diff shows the whole project as changed. Git stores
+# LF and checks out whatever the platform wants.
+* text=auto eol=lf
+
+# Binary, never touch.
+*.png binary
+*.webp binary
+*.jpg binary
+*.woff2 binary
