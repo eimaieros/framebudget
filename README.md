@@ -3,6 +3,11 @@
 **A runtime frame budget for animated websites.** It measures what the user
 actually feels, and turns the animation down before they feel it.
 
+[![CI](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml/badge.svg)](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![7.3 KB minified](https://img.shields.io/badge/minified-7.3%20KB-informational)
+
 No dependencies. 7.3 KB minified, 2.9 KB gzipped. Ships TypeScript types.
 
 ---
@@ -208,6 +213,13 @@ beside its source is how the two end up disagreeing. `prepare` runs the
 generation on install, so a git dependency gets its types built on the way in.
 
 ---
+
+## Contributing
+
+[CONTRIBUTING.md](CONTRIBUTING.md) covers how to run it and what a good pull
+request looks like. [CHANGELOG.md](CHANGELOG.md) records what changed and, more
+usefully, what was wrong before. Security reports go to
+[SECURITY.md](SECURITY.md).
 
 ## Licence
 

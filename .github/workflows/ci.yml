@@ -10,10 +10,12 @@ jobs:
     strategy:
       # The library has no dependencies, so what is being tested here is the
       # runtime itself: `node:test` and the assertion API changed shape across
-      # these three majors, and 20 is the oldest release anyone still ships on.
+      # these majors. Node 20 was here and came out on 2026-04-30, when it
+      # reached end of life — testing against a runtime that no longer receives
+      # security patches is theatre, not coverage.
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: [22, 24]
     steps:
       # v5 and not v4: the v4 actions run on a Node 20 runtime that GitHub has
       # deprecated, and every run was raising a warning for it.
