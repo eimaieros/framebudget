@@ -6,9 +6,9 @@ actually feels, and turns the animation down before they feel it.
 [![CI](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml/badge.svg)](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![7.3 KB minified](https://img.shields.io/badge/minified-7.3%20KB-informational)
+![8.3 KB minified](https://img.shields.io/badge/minified-8.3%20KB-informational)
 
-No dependencies. 7.3 KB minified, 2.9 KB gzipped. Ships TypeScript types.
+No dependencies. 8.3 KB minified, 3.3 KB gzipped. Ships TypeScript types.
 
 ---
 
