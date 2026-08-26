@@ -202,7 +202,7 @@ npm run types # tsc --strict --checkJs over the JavaScript source
 npm run check # both
 ```
 
-24 tests. The suite is written around the failure modes, not the happy path —
+37 tests. The suite is written around the failure modes, not the happy path —
 vsync jitter, background suspension, single spikes, oscillation, and the
 sentinel bug where `0` was used to mean "not started" on a clock that legally
 starts at zero.

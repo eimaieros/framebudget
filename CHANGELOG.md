@@ -6,6 +6,31 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **A starting tier from the device's own signals.** The controller is
+  measurement-driven, which is the right way round, but it cannot react to a
+  frame that has not been drawn yet — so every page started at `full` and spent
+  its first second discovering the hardware. On a two-core phone that is the
+  second in which the visitor decides whether to stay.
+
+  `readDevice()` reads `hardwareConcurrency`, `deviceMemory` and
+  `connection.saveData` before the first frame and picks a tier to start in.
+  `saveData` is treated as an instruction; the other two are treated as weak
+  hints and only agree on `minimal` when both are small, because core count is
+  a poor stand-in for speed and `deviceMemory` is Chromium-only and bucketed.
+
+  It moves the *starting* tier and nothing else. Measurement takes over on the
+  next frame and climbs straight back to `full` on a device this guesses wrong
+  about — there is a test that asserts exactly that, because the day this
+  becomes a ceiling instead of a floor is the day it stops being honest.
+
+  Off with `new FrameBudget({ adaptToDevice: false })`.
+
+- `report().startedAt` — the tier the device signals suggested at boot.
+  `startedAt: 'minimal'` with `tier: 'full'` means the guess was wrong and
+  measurement corrected it, which is the system working.
+
 ### Changed
 
 - TypeScript 5 → 7 for the declaration build, with `rootDir` now explicit in
