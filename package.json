@@ -20,8 +20,9 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "types": "tsc",
-    "check": "npm run types && npm test",
-    "prepare": "npm run types"
+    "check": "npm run types && npm test && npm run size",
+    "prepare": "npm run types",
+    "size": "node tools/tamanho.js"
   },
   "keywords": [
     "performance",
@@ -43,7 +44,8 @@
   "homepage": "https://rodrigofigueiredo.dev/framebudget/",
   "sideEffects": false,
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "esbuild": "^0.25.0"
   },
   "bugs": {
     "url": "https://github.com/eimaieros/framebudget/issues"
