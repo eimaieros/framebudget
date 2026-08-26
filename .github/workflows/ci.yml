@@ -17,10 +17,12 @@ jobs:
       matrix:
         node: [22, 24]
     steps:
-      # v5 and not v4: the v4 actions run on a Node 20 runtime that GitHub has
-      # deprecated, and every run was raising a warning for it.
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      # v7. Kept current on purpose: a workflow that pins an old major keeps
+      # working right up until the runtime under it is retired, and then fails
+      # on a day nobody chose. Dependabot watches these now (.github/dependabot.yml)
+      # so the bump arrives as a pull request instead of as a broken build.
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
       # `npm ci` needs the lockfile to agree with package.json. If it ever
