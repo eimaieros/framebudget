@@ -43,10 +43,18 @@ jobs:
       # report success. That is not hypothetical: the sibling portfolio repo
       # shipped `node harness.js | tail -1` and printed "Tudo passa" while its
       # first check was crashing. Same shape, same trap, one line apart.
+      # `node --test --test-reporter=tap test/*.test.js`, with the flag BEFORE
+      # the files, and not `npm test -- --test-reporter=tap`.
+      #
+      # The `npm test --` form puts the flag after the file arguments, and Node
+      # 24 ignores a node option in that position where Node 22 honours it. The
+      # first version of this step used it, and the result was a job called
+      # "Tests, with the TAP kept" that kept no TAP on Node 24 — green on 22,
+      # red on 24, off the same commit. Options go before positionals.
       - name: Tests, with the TAP kept
         run: |
           set -o pipefail
-          npm test -- --test-reporter=tap | tee /tmp/testes.tap
+          node --test --test-reporter=tap test/*.test.js | tee /tmp/testes.tap
 
       - name: The docs still state the right number of tests
         run: node tools/contagem.js /tmp/testes.tap
