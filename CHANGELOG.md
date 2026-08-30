@@ -33,6 +33,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Dwell timers now belong to a direction. A long recovery interval can no
+  longer make the first bad sample degrade immediately, and the inverse is
+  also true.
+- `start()` remains retryable when called before `requestAnimationFrame` is
+  available, and non-finite frame-rate targets are rejected explicitly.
+- Long-task counters now mean what the report says: entries observed since
+  `start()`, without replaying older buffered tasks.
+
 - TypeScript 5 → 7 for the declaration build, with `rootDir` now explicit in
   `tsconfig.json`. TypeScript 7 stops with `TS5011` rather than inferring the
   common source directory the way 5 did, so the bump alone would have turned CI

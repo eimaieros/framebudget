@@ -78,6 +78,9 @@ export class Hud {
     this._timer = 0;
     this._el?.remove?.();
     this._el = null;
+    // A remount starts with a blank element. Keeping the previous text would
+    // make _paint() skip the first write whenever the metrics had not changed.
+    this._last = '';
     return this;
   }
 }

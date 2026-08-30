@@ -6,9 +6,9 @@ actually feels, and turns the animation down before they feel it.
 [![CI](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml/badge.svg)](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![8.3 KB minified](https://img.shields.io/badge/minified-8.3%20KB-informational)
+![8.6 KB minified](https://img.shields.io/badge/minified-8.6%20KB-informational)
 
-No dependencies. 8.3 KB minified, 3.3 KB gzipped. Ships TypeScript types.
+No dependencies. 8.6 KB minified, 3.3 KB gzipped. Ships TypeScript types.
 
 ---
 
@@ -202,7 +202,7 @@ npm run types # tsc --strict --checkJs over the JavaScript source
 npm run check # both
 ```
 
-37 tests. The suite is written around the failure modes, not the happy path —
+40 tests. The suite is written around the failure modes, not the happy path —
 vsync jitter, background suspension, single spikes, oscillation, and the
 sentinel bug where `0` was used to mean "not started" on a clock that legally
 starts at zero.

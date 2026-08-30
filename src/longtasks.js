@@ -43,7 +43,9 @@ export class LongTasks {
           if (e.duration > this.longestMs) this.longestMs = e.duration;
         }
       });
-      this._obs.observe({ type: 'longtask', buffered: true });
+      // Reports promise "since start". `buffered: true` also replays entries
+      // from before start(), making that claim false on a late-mounted meter.
+      this._obs.observe({ type: 'longtask' });
     } catch {
       // Some browsers advertise the type and then refuse the subscription.
       this.supported = false;

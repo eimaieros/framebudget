@@ -61,7 +61,34 @@ test('an invalid target is rejected up front', () => {
   assert.throws(() => new FrameBudget({ target: -1 }), RangeError);
 });
 
+test('a non-finite target is rejected up front', () => {
+  assert.throws(() => new FrameBudget({ target: Infinity }), RangeError);
+  assert.throws(() => new FrameBudget({ target: Number.NaN }), RangeError);
+});
+
 test('start() without requestAnimationFrame does not throw', () => {
   const fb = new FrameBudget();
   assert.doesNotThrow(() => fb.start().stop());
+});
+
+test('start() can be retried when requestAnimationFrame appears later', () => {
+  const oldRaf = globalThis.requestAnimationFrame;
+  const oldCancel = globalThis.cancelAnimationFrame;
+  try {
+    delete globalThis.requestAnimationFrame;
+    const fb = new FrameBudget();
+    fb.start();
+
+    let scheduled = 0;
+    globalThis.requestAnimationFrame = () => (++scheduled, 7);
+    globalThis.cancelAnimationFrame = () => {};
+    fb.start();
+    assert.equal(scheduled, 1, 'the no-rAF attempt must not leave it marked running');
+    fb.stop();
+  } finally {
+    if (oldRaf) globalThis.requestAnimationFrame = oldRaf;
+    else delete globalThis.requestAnimationFrame;
+    if (oldCancel) globalThis.cancelAnimationFrame = oldCancel;
+    else delete globalThis.cancelAnimationFrame;
+  }
 });
