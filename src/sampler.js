@@ -29,6 +29,9 @@ export class Sampler {
 
   /** @param {number} delta ms between frames */
   push(delta) {
+    if (!Number.isFinite(delta) || delta <= 0) {
+      throw new RangeError('Sampler: delta must be a finite number > 0');
+    }
     this._buf[this._i] = delta;
     this._i = (this._i + 1) % this.size;
     if (this._n < this.size) this._n++;
@@ -54,6 +57,9 @@ export class Sampler {
    * @returns {number} 0 when there are no samples yet.
    */
   percentile(p) {
+    if (!Number.isFinite(p) || p < 0 || p > 1) {
+      throw new RangeError('Sampler: percentile must be between 0 and 1');
+    }
     if (this._n === 0) return 0;
     const view = this._sorted.subarray(0, this._n);
     view.set(this._buf.subarray(0, this._n));
@@ -84,6 +90,9 @@ export class Sampler {
    * @returns {number} between 0 and 1
    */
   missRate(thresholdMs) {
+    if (!Number.isFinite(thresholdMs) || thresholdMs <= 0) {
+      throw new RangeError('Sampler: threshold must be a finite number > 0');
+    }
     if (this._n === 0) return 0;
     let bad = 0;
     for (let k = 0; k < this._n; k++) {

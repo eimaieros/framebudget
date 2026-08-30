@@ -39,3 +39,10 @@ test('non-monotonic clocks do not poison the statistics', () => {
   c.tick(1000);
   assert.equal(c.tick(900), null, 'a negative delta is discarded');
 });
+
+test('a non-finite timestamp is ignored without poisoning the next frame', () => {
+  const c = new Clock({ hidden: () => false });
+  c.tick(1000);
+  assert.equal(c.tick(Number.NaN), null);
+  assert.equal(c.tick(1016), 16);
+});

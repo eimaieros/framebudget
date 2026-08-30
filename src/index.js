@@ -90,6 +90,9 @@ export class FrameBudget {
     this._onTierChange = opts.onTierChange;
     this._onReport = opts.onReport;
     this._reportEvery = opts.reportEveryMs ?? 1000;
+    if (!Number.isFinite(this._reportEvery) || this._reportEvery <= 0) {
+      throw new RangeError('FrameBudget: reportEveryMs must be a finite number > 0');
+    }
     this._ultimoReport = 0;
     this._raf = 0;
     this._running = false;
@@ -201,9 +204,9 @@ export class FrameBudget {
     const loop = (/** @type {number} */ t) => {
       if (!this._running) return;
       this.frame(t);
-      this._raf = raf(loop);
+      this._raf = raf.call(g, loop);
     };
-    this._raf = raf(loop);
+    this._raf = raf.call(g, loop);
     return this;
   }
 

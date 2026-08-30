@@ -43,6 +43,21 @@ export class TierController {
     this.dwellDownMs = opts.dwellDownMs ?? 600;
     this.dwellUpMs = opts.dwellUpMs ?? 4000;
 
+    if (!Number.isFinite(this.budgetMs) || this.budgetMs <= 0) {
+      throw new RangeError('TierController: budgetMs must be a finite number > 0');
+    }
+    if (
+      !Number.isFinite(this.downMissRate) || this.downMissRate < 0 || this.downMissRate > 1 ||
+      !Number.isFinite(this.upMissRate) || this.upMissRate < 0 || this.upMissRate > 1
+    ) {
+      throw new RangeError('TierController: miss rates must be between 0 and 1');
+    }
+    if (
+      !Number.isFinite(this.dwellDownMs) || this.dwellDownMs < 0 ||
+      !Number.isFinite(this.dwellUpMs) || this.dwellUpMs < 0
+    ) {
+      throw new RangeError('TierController: dwell times must be finite numbers >= 0');
+    }
     if (this.upMissRate >= this.downMissRate) {
       // Without this asymmetry there is no hysteresis, and the controller is
       // guaranteed to oscillate. Fail loudly at construction, not at runtime.
@@ -50,7 +65,11 @@ export class TierController {
     }
 
     /** @type {Tier} */
-    this.tier = opts.start ?? 'full';
+    const start = opts.start ?? 'full';
+    if (!TIERS.includes(start)) {
+      throw new RangeError(`TierController: start must be one of ${TIERS.join(', ')}`);
+    }
+    this.tier = start;
 
     /**
      * When the current condition started.
@@ -87,6 +106,12 @@ export class TierController {
    * @returns {Tier|null} The new tier, or `null` if nothing changed.
    */
   update(missRate, now) {
+    if (!Number.isFinite(missRate) || missRate < 0 || missRate > 1) {
+      throw new RangeError('TierController: missRate must be between 0 and 1');
+    }
+    if (!Number.isFinite(now)) {
+      throw new RangeError('TierController: now must be finite');
+    }
     /** @type {'down'|'up'|null} */
     let condition = null;
     if (missRate > this.downMissRate && this.index < TIERS.length - 1) condition = 'down';
