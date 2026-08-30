@@ -35,7 +35,11 @@ export class Hud {
    */
   constructor(fb, opts = {}) {
     this.fb = fb;
-    this.interval = 1000 / (opts.hz ?? 4);
+    const hz = opts.hz ?? 4;
+    if (!Number.isFinite(hz) || hz <= 0) {
+      throw new RangeError('Hud: hz must be a finite number > 0');
+    }
+    this.interval = 1000 / hz;
     this._el = null;
     this._timer = 0;
     this._last = '';

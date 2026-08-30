@@ -53,3 +53,13 @@ test('an absurd window is rejected', () => {
   assert.throws(() => new Sampler(2), RangeError);
   assert.throws(() => new Sampler(1.5), RangeError);
 });
+
+test('invalid samples and queries are rejected before they poison statistics', () => {
+  const s = new Sampler(8);
+  for (const delta of [0, -1, Number.NaN, Infinity]) {
+    assert.throws(() => s.push(delta), RangeError);
+  }
+  assert.equal(s.count, 0);
+  assert.throws(() => s.percentile(1.1), RangeError);
+  assert.throws(() => s.missRate(0), RangeError);
+});

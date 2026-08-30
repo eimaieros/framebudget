@@ -66,6 +66,11 @@ test('a non-finite target is rejected up front', () => {
   assert.throws(() => new FrameBudget({ target: Number.NaN }), RangeError);
 });
 
+test('an invalid reporting interval is rejected up front', () => {
+  assert.throws(() => new FrameBudget({ reportEveryMs: 0 }), RangeError);
+  assert.throws(() => new FrameBudget({ reportEveryMs: Infinity }), RangeError);
+});
+
 test('start() without requestAnimationFrame does not throw', () => {
   const fb = new FrameBudget();
   assert.doesNotThrow(() => fb.start().stop());
@@ -85,6 +90,24 @@ test('start() can be retried when requestAnimationFrame appears later', () => {
     fb.start();
     assert.equal(scheduled, 1, 'the no-rAF attempt must not leave it marked running');
     fb.stop();
+  } finally {
+    if (oldRaf) globalThis.requestAnimationFrame = oldRaf;
+    else delete globalThis.requestAnimationFrame;
+    if (oldCancel) globalThis.cancelAnimationFrame = oldCancel;
+    else delete globalThis.cancelAnimationFrame;
+  }
+});
+
+test('requestAnimationFrame is invoked with the browser global as receiver', () => {
+  const oldRaf = globalThis.requestAnimationFrame;
+  const oldCancel = globalThis.cancelAnimationFrame;
+  try {
+    globalThis.requestAnimationFrame = function () {
+      assert.equal(this, globalThis);
+      return 9;
+    };
+    globalThis.cancelAnimationFrame = () => {};
+    new FrameBudget().start().stop();
   } finally {
     if (oldRaf) globalThis.requestAnimationFrame = oldRaf;
     else delete globalThis.requestAnimationFrame;

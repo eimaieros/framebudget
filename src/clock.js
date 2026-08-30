@@ -53,6 +53,10 @@ export class Clock {
   tick(t) {
     const now = t ?? this._now();
 
+    // A bad timestamp must not turn every later delta into NaN. Manual loops
+    // are public API, so distrust their clock at the boundary.
+    if (!Number.isFinite(now)) return null;
+
     if (this._hidden()) {
       // Hidden: there is nothing to measure, and rAF may not even be running.
       this._last = null;

@@ -7,6 +7,21 @@ test('without asymmetry there is no hysteresis, and the constructor refuses', ()
   assert.throws(() => new TierController({ downMissRate: 0.1, upMissRate: 0.3 }), RangeError);
 });
 
+test('every constructor option is validated at the public boundary', () => {
+  assert.throws(() => new TierController({ budgetMs: 0 }), RangeError);
+  assert.throws(() => new TierController({ downMissRate: 2 }), RangeError);
+  assert.throws(() => new TierController({ upMissRate: -1 }), RangeError);
+  assert.throws(() => new TierController({ dwellDownMs: Infinity }), RangeError);
+  assert.throws(() => new TierController({ dwellUpMs: -1 }), RangeError);
+  assert.throws(() => new TierController({ start: 'turbo' }), RangeError);
+});
+
+test('invalid runtime measurements are rejected', () => {
+  const c = new TierController();
+  assert.throws(() => c.update(Number.NaN, 0), RangeError);
+  assert.throws(() => c.update(0.1, Infinity), RangeError);
+});
+
 test('it does not degrade unless the condition persists', () => {
   const c = new TierController({ dwellDownMs: 600 });
   assert.equal(c.update(0.9, 0), null);
