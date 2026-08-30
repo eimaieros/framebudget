@@ -62,3 +62,18 @@ test('the dead zone between thresholds does nothing — that is its job', () => 
   }
   assert.equal(c.tier, 'reduced');
 });
+
+test('time accumulated in one direction cannot pay the opposite dwell', () => {
+  const c = new TierController({
+    dwellDownMs: 600,
+    dwellUpMs: 4000,
+    start: 'reduced',
+  });
+
+  c.update(0.0, 0);
+  c.update(0.0, 3500); // healthy for a long time, but not enough to upgrade
+
+  assert.equal(c.update(0.9, 3600), null, 'the first bad sample starts a new timer');
+  assert.equal(c.update(0.9, 4100), null, 'only 500 ms of failure have elapsed');
+  assert.equal(c.update(0.9, 4201), 'minimal', 'the down dwell is now genuinely met');
+});

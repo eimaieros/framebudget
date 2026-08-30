@@ -67,6 +67,9 @@ export class TierController {
      */
     this._since = null;
 
+    /** @type {'down'|'up'|null} Which condition the dwell timer belongs to. */
+    this._condition = null;
+
     /** Upgrades that went wrong, per tier. Makes the next attempt costlier. */
     this._regret = new Map();
   }
@@ -84,7 +87,21 @@ export class TierController {
    * @returns {Tier|null} The new tier, or `null` if nothing changed.
    */
   update(missRate, now) {
-    if (this._since === null) this._since = now;
+    /** @type {'down'|'up'|null} */
+    let condition = null;
+    if (missRate > this.downMissRate && this.index < TIERS.length - 1) condition = 'down';
+    else if (missRate < this.upMissRate && this.index > 0) condition = 'up';
+
+    // A recovery interval cannot pay for a degradation (or vice versa). The
+    // earlier implementation reused one timestamp for both directions, so a
+    // long healthy run followed by one bad sample could degrade immediately.
+    if (condition !== this._condition) {
+      this._condition = condition;
+      this._since = condition === null ? null : now;
+      return null;
+    }
+    if (condition === null || this._since === null) return null;
+
     const elapsed = now - this._since;
 
     // Down: fast, because the cost of waiting is the user seeing the stutter.
@@ -116,7 +133,8 @@ export class TierController {
 
     // Neither: the timer restarts. A condition only counts if it persists —
     // brushing past a threshold on the way through is not a signal.
-    this._since = now;
+    this._condition = null;
+    this._since = null;
     return null;
   }
 }

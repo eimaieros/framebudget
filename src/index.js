@@ -61,7 +61,9 @@ export class FrameBudget {
    */
   constructor(opts = {}) {
     const target = opts.target ?? 60;
-    if (!(target > 0)) throw new RangeError('FrameBudget: target must be > 0');
+    if (!Number.isFinite(target) || !(target > 0)) {
+      throw new RangeError('FrameBudget: target must be a finite number > 0');
+    }
 
     this.budgetMs = 1000 / target;
 
@@ -187,16 +189,15 @@ export class FrameBudget {
   /** Start measuring with an internal loop. */
   start() {
     if (this._running) return this;
-    this._running = true;
-    this.clock.reset();
-    this.longTasks.start();
-
     const g = /** @type {any} */ (globalThis);
     const raf = g.requestAnimationFrame;
     if (typeof raf !== 'function') {
       // Without rAF there is nothing to measure. Stay in manual mode, quietly.
       return this;
     }
+    this._running = true;
+    this.clock.reset();
+    this.longTasks.start();
     const loop = (/** @type {number} */ t) => {
       if (!this._running) return;
       this.frame(t);
