@@ -33,7 +33,9 @@ This library is those techniques, made measurable and automatic.
 Straight from the repository — no npm release yet:
 
 ```bash
-npm install github:eimaieros/framebudget
+# Pinned to a release. Without the tag npm gives you whatever `main`
+# is right now, which is not a dependency, it is a subscription.
+npm install github:eimaieros/framebudget#v0.1.0
 ```
 
 Or copy `src/` into your project. It's ES modules with no dependencies, so
