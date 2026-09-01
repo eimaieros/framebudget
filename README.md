@@ -6,9 +6,9 @@ actually feels, and turns the animation down before they feel it.
 [![CI](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml/badge.svg)](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![10 KB minified](https://img.shields.io/badge/minified-10%20KB-informational)
+![11.7 KB minified](https://img.shields.io/badge/minified-11.7%20KB-informational)
 
-No dependencies. 10 KB minified, 3.6 KB gzipped. Ships TypeScript types.
+No dependencies. 11.7 KB minified, 3.9 KB gzipped. Ships TypeScript types.
 
 ---
 
@@ -60,13 +60,19 @@ Already have an animation loop? Don't start a second one:
 gsap.ticker.add((time) => fb.frame(time * 1000));
 ```
 
+The first caller-driven frame starts the optional task/frame observers too;
+manual-loop reports carry the same diagnostics as `.start()` reports.
+
 Read the numbers whenever you want:
 
 ```js
 fb.report();
 // { fps: 58.9, medianMs: 17.0, p95Ms: 41.2, missRate: 0.08,
 //   samples: 120, discarded: 2, tier: 'reduced',
-//   longTasks: 3, longestTaskMs: 214, reducedMotion: false }
+//   longTasks: 3, longestTaskMs: 214, longFrames: 2,
+//   longestFrameMs: 96, blockingDurationMs: 44,
+//   longestBlockingDurationMs: 31,
+//   forcedStyleAndLayoutMs: 7, reducedMotion: false }
 ```
 
 Development overlay:
@@ -171,7 +177,7 @@ looks slow in a profile, and the site crawls.
 | `watchLayoutThrash(fn)` | Forced-layout detector |
 
 Building blocks are exported individually: `Clock`, `Sampler`, `TierController`,
-`LongTasks`.
+`LongTasks`, `LongAnimationFrames`.
 
 ---
 
@@ -183,6 +189,7 @@ somewhere:
 | Missing | What happens |
 |---|---|
 | `PerformanceObserver` / `longtask` | Long-task counters stay at zero. Nothing else changes. |
+| `PerformanceObserver` / `long-animation-frame` | Long-frame, blocking and forced-layout counters stay at zero. |
 | `requestAnimationFrame` | `start()` becomes a no-op. `frame()` still works. |
 | `matchMedia` | `reducedMotion` reads `false`. |
 | `document` | The HUD refuses to mount. The library still measures. |
@@ -202,7 +209,7 @@ npm run types # tsc --strict --checkJs over the JavaScript source
 npm run check # both
 ```
 
-47 tests. The suite is written around the failure modes, not the happy path —
+58 tests. The suite is written around the failure modes, not the happy path —
 vsync jitter, background suspension, single spikes, oscillation, and the
 sentinel bug where `0` was used to mean "not started" on a clock that legally
 starts at zero.

@@ -8,6 +8,17 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- Long Animation Frames measurement through the optional
+  `long-animation-frame` performance entry type. Reports now separate frame
+  duration, blocking duration and forced style/layout attribution instead of
+  treating every slow frame as one undifferentiated number. Unsupported
+  browsers keep zeroed fields, and observation never replays work from before
+  `start()`.
+- Caller-driven `frame()` mode starts Long Tasks and Long Animation Frames
+  observation on its first sample, matching the diagnostics of rAF mode.
+- Long Tasks now reject non-finite and negative browser/polyfill entries before
+  they can poison every aggregate in the public report.
+
 - **A starting tier from the device's own signals.** The controller is
   measurement-driven, which is the right way round, but it cannot react to a
   frame that has not been drawn yet — so every page started at `full` and spent

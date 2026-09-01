@@ -20,6 +20,7 @@ import { Clock } from './clock.js';
 import { Sampler } from './sampler.js';
 import { TierController, TIERS } from './tiers.js';
 import { LongTasks } from './longtasks.js';
+import { LongAnimationFrames } from './longframes.js';
 import { watchLayoutThrash } from './thrash.js';
 import { Hud } from './hud.js';
 import { readDevice } from './device.js';
@@ -37,6 +38,11 @@ import { readDevice } from './device.js';
  * @property {Tier}   tier       Current quality tier.
  * @property {number} longTasks  Long tasks since start.
  * @property {number} longestTaskMs
+ * @property {number} longFrames Long animation frames observed since start.
+ * @property {number} longestFrameMs
+ * @property {number} blockingDurationMs Total LoAF blocking duration.
+ * @property {number} longestBlockingDurationMs Worst LoAF blocking duration.
+ * @property {number} forcedStyleAndLayoutMs Forced style/layout attributed by LoAF.
  * @property {boolean} reducedMotion The user asked for less motion.
  * @property {string} startedAt The tier the device signals suggested at boot,
  *   which is not the same as the tier now. Useful when a report looks odd:
@@ -85,6 +91,7 @@ export class FrameBudget {
     this.clock = new Clock();
     this.sampler = new Sampler(opts.window ?? 120);
     this.longTasks = new LongTasks();
+    this.longFrames = new LongAnimationFrames();
     this.controller = new TierController({ budgetMs: this.dropMs });
 
     this._onTierChange = opts.onTierChange;
@@ -96,6 +103,7 @@ export class FrameBudget {
     this._ultimoReport = 0;
     this._raf = 0;
     this._running = false;
+    this._observing = false;
 
     /**
      * What the device admits about itself, read once, before the first frame.
@@ -162,6 +170,11 @@ export class FrameBudget {
       tier: this.controller.tier,
       longTasks: this.longTasks.count,
       longestTaskMs: this.longTasks.longestMs,
+      longFrames: this.longFrames.count,
+      longestFrameMs: this.longFrames.longestMs,
+      blockingDurationMs: this.longFrames.blockingMs,
+      longestBlockingDurationMs: this.longFrames.longestBlockingMs,
+      forcedStyleAndLayoutMs: this.longFrames.forcedStyleAndLayoutMs,
       reducedMotion: this.reducedMotion,
       startedAt: this.device.tier,
     };
@@ -174,6 +187,7 @@ export class FrameBudget {
    * @param {number} [t]
    */
   frame(t) {
+    this._startObservers();
     const delta = this.clock.tick(t);
     if (delta !== null) this.sampler.push(delta);
 
@@ -200,7 +214,7 @@ export class FrameBudget {
     }
     this._running = true;
     this.clock.reset();
-    this.longTasks.start();
+    this._startObservers();
     const loop = (/** @type {number} */ t) => {
       if (!this._running) return;
       this.frame(t);
@@ -216,9 +230,22 @@ export class FrameBudget {
     if (this._raf) g.cancelAnimationFrame?.(this._raf);
     this._raf = 0;
     this.longTasks.stop();
+    this.longFrames.stop();
+    this._observing = false;
     return this;
+  }
+
+  /** Start optional diagnostic observers in rAF and caller-driven modes. */
+  _startObservers() {
+    if (this._observing) return;
+    this._observing = true;
+    this.longTasks.start();
+    this.longFrames.start();
   }
 }
 
-export { Clock, Sampler, TierController, TIERS, LongTasks, watchLayoutThrash, Hud };
+export {
+  Clock, Sampler, TierController, TIERS, LongTasks, LongAnimationFrames,
+  watchLayoutThrash, Hud,
+};
 export { readDevice, classify } from './device.js';

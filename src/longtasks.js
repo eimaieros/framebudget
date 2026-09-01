@@ -38,9 +38,11 @@ export class LongTasks {
     try {
       this._obs = new g.PerformanceObserver((/** @type {any} */ list) => {
         for (const e of list.getEntries()) {
+          const duration = finiteNonNegative(e?.duration);
+          if (duration === null) continue;
           this.count++;
-          this.totalMs += e.duration;
-          if (e.duration > this.longestMs) this.longestMs = e.duration;
+          this.totalMs += duration;
+          if (duration > this.longestMs) this.longestMs = duration;
         }
       });
       // Reports promise "since start". `buffered: true` also replays entries
@@ -63,4 +65,11 @@ export class LongTasks {
     this.totalMs = 0;
     this.longestMs = 0;
   }
+}
+
+/** @param {unknown} value @returns {number|null} */
+function finiteNonNegative(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? value
+    : null;
 }
