@@ -56,6 +56,32 @@ test('the report invents nothing before it starts', () => {
   assert.equal(r.tier, 'full');
 });
 
+test('caller-driven frame() starts diagnostic observers exactly once', () => {
+  const fb = new FrameBudget();
+  const started = [];
+  fb.longTasks.start = () => started.push('tasks');
+  fb.longFrames.start = () => started.push('frames');
+
+  fb.frame(0);
+  fb.frame(16.7);
+
+  assert.deepEqual(started, ['tasks', 'frames']);
+});
+
+test('the public report exposes every long-frame aggregate it measures', () => {
+  const fb = new FrameBudget();
+  fb.longFrames.longestMs = 90;
+  fb.longFrames.blockingMs = 40;
+  fb.longFrames.longestBlockingMs = 25;
+  fb.longFrames.forcedStyleAndLayoutMs = 7;
+  const report = fb.report();
+
+  assert.equal(report.longestFrameMs, 90);
+  assert.equal(report.blockingDurationMs, 40);
+  assert.equal(report.longestBlockingDurationMs, 25);
+  assert.equal(report.forcedStyleAndLayoutMs, 7);
+});
+
 test('an invalid target is rejected up front', () => {
   assert.throws(() => new FrameBudget({ target: 0 }), RangeError);
   assert.throws(() => new FrameBudget({ target: -1 }), RangeError);
