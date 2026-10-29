@@ -225,10 +225,7 @@ generation on install, so a git dependency gets its types built on the way in.
 
 ## Contributing
 
-[CONTRIBUTING.md](CONTRIBUTING.md) covers how to run it and what a good pull
-request looks like. [CHANGELOG.md](CHANGELOG.md) records what changed and, more
-usefully, what was wrong before. Security reports go to
-[SECURITY.md](SECURITY.md).
+Issues and pull requests are welcome. `npm test` runs the suite.
 
 ## Licence
 
