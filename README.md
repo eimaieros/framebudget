@@ -10,6 +10,8 @@ actually feels, and turns the animation down before they feel it.
 
 No dependencies. 11.7 KB minified, 3.9 KB gzipped. Ships TypeScript types.
 
+[![framebudget: frame times per frame, with the quality tier dropping from full to reduced and back](.github/preview.webp)](https://rodrigofigueiredo.dev/framebudget/)
+
 ---
 
 ## Why this exists
