@@ -99,6 +99,18 @@ export class TierController {
   }
 
   /**
+   * Drop any condition in progress, so the next update starts a fresh dwell.
+   *
+   * For when the tier was set from outside (the user asking for less motion,
+   * or asking for it no longer): time spent before that is not evidence about
+   * what comes after it.
+   */
+  forget() {
+    this._condition = null;
+    this._since = null;
+  }
+
+  /**
    * Feed the controller the current state.
    *
    * @param {number} missRate Fraction of frames over threshold (0–1).

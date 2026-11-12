@@ -57,8 +57,9 @@ export class FrameBudget {
    * @param {(tier: Tier, report: Report) => void} [opts.onTierChange]
    * @param {(report: Report) => void} [opts.onReport]
    * @param {number} [opts.reportEveryMs]
-   * @param {boolean} [opts.respectReducedMotion] Start at minimal if the user
-   *   has asked for less motion. Defaults to true.
+   * @param {boolean} [opts.respectReducedMotion] Hold the tier at minimal for
+   *   as long as the user asks for less motion, following the setting if it
+   *   changes while the page is open. Defaults to true.
    * @param {boolean} [opts.adaptToDevice] Start in the tier the device's own
    *   signals suggest instead of always starting at `full`. Defaults to true.
    *   See `device.js` for why those signals are only trusted this far.
@@ -135,12 +136,19 @@ export class FrameBudget {
       this.controller.tier = this.device.tier;
     }
 
+    /**
+     * Less motion is something the user asked for, not something measurement
+     * can overrule. This used to set only the starting tier: on a fast device
+     * the controller then climbed back to `full` within seconds, and the
+     * visitor who had asked for less motion got all of it.
+     */
+    this._respectReducedMotion = opts.respectReducedMotion ?? true;
     this.reducedMotion = this._prefersReducedMotion();
-    if (this.reducedMotion && (opts.respectReducedMotion ?? true)) {
-      // Someone who asked for less motion should not have to wait for the
-      // controller to "discover" the device is slow. Start at minimal.
-      this.controller.tier = 'minimal';
-    }
+    if (this._holdingForMotion) this.controller.tier = 'minimal';
+    /** @type {{ removeEventListener: Function } | null} */
+    this._motionQuery = null;
+    /** @type {((e: { matches?: boolean }) => void) | null} */
+    this._onMotionChange = null;
   }
 
   /** @returns {boolean} */
@@ -193,7 +201,9 @@ export class FrameBudget {
 
     const agora = t ?? (/** @type {any} */ (globalThis).performance?.now?.() ?? Date.now());
 
-    if (this.sampler.ready) {
+    // While the user asks for less motion the tier stays where it is; frames
+    // are still measured, so the report keeps telling the truth.
+    if (this.sampler.ready && !this._holdingForMotion) {
       const novo = this.controller.update(this.sampler.missRate(this.dropMs), agora);
       if (novo && this._onTierChange) this._onTierChange(novo, this.report());
     }
@@ -231,8 +241,47 @@ export class FrameBudget {
     this._raf = 0;
     this.longTasks.stop();
     this.longFrames.stop();
+    this._motionQuery?.removeEventListener('change', this._onMotionChange);
+    this._motionQuery = null;
+    this._onMotionChange = null;
     this._observing = false;
     return this;
+  }
+
+  /** @returns {boolean} */
+  get _holdingForMotion() {
+    return this.reducedMotion && this._respectReducedMotion;
+  }
+
+  /**
+   * Follow prefers-reduced-motion if it changes while the page is open: turned
+   * on, the tier drops to minimal at once; turned off, measurement takes over
+   * again from where it is.
+   */
+  _watchMotion() {
+    const g = /** @type {any} */ (globalThis);
+    let query = null;
+    try {
+      query = g.matchMedia?.('(prefers-reduced-motion: reduce)') ?? null;
+    } catch {
+      query = null;
+    }
+    if (!query || typeof query.addEventListener !== 'function') return;
+    this._motionQuery = query;
+    this._onMotionChange = (e) => this._setReducedMotion(e?.matches === true);
+    query.addEventListener('change', this._onMotionChange);
+  }
+
+  /** @param {boolean} on */
+  _setReducedMotion(on) {
+    if (on === this.reducedMotion) return;
+    this.reducedMotion = on;
+    if (!this._respectReducedMotion) return;
+    this.controller.forget();
+    if (on && this.controller.tier !== 'minimal') {
+      this.controller.tier = 'minimal';
+      if (this._onTierChange) this._onTierChange('minimal', this.report());
+    }
   }
 
   /** Start optional diagnostic observers in rAF and caller-driven modes. */
@@ -241,6 +290,7 @@ export class FrameBudget {
     this._observing = true;
     this.longTasks.start();
     this.longFrames.start();
+    this._watchMotion();
   }
 }
 

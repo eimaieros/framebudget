@@ -6,9 +6,9 @@ actually feels, and turns the animation down before they feel it.
 [![CI](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml/badge.svg)](https://github.com/eimaieros/framebudget/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
-![11.7 KB minified](https://img.shields.io/badge/minified-11.7%20KB-informational)
+![12.6 KB minified](https://img.shields.io/badge/minified-12.6%20KB-informational)
 
-No dependencies. 11.7 KB minified, 3.9 KB gzipped. Ships TypeScript types.
+No dependencies. 12.6 KB minified, 4.1 KB gzipped. Ships TypeScript types.
 
 [![framebudget: frame times per frame, with the quality tier dropping from full to reduced and back](.github/preview.webp)](https://rodrigofigueiredo.dev/framebudget/)
 
@@ -143,6 +143,13 @@ than either state on its own.
 The constructor throws if `upMissRate >= downMissRate`, because without that
 asymmetry there is no hysteresis and the controller is guaranteed to oscillate.
 
+One thing measurement never overrules: `prefers-reduced-motion`. With it on,
+the tier sits at `minimal` for as long as the setting stays on, however good
+the frames are, and it follows the setting if the visitor changes it while the
+page is open. Until November 2026 it only set the *starting* tier, and on a
+fast device the controller climbed back to `full` within seconds. Pass
+`respectReducedMotion: false` if your page handles reduced motion itself.
+
 ---
 
 ## Layout thrash detector
@@ -213,7 +220,7 @@ npm run types # tsc --strict --checkJs over the JavaScript source
 npm run check # both
 ```
 
-58 tests. The suite is written around the failure modes, not the happy path —
+61 tests. The suite is written around the failure modes, not the happy path —
 vsync jitter, background suspension, single spikes, oscillation, and the
 sentinel bug where `0` was used to mean "not started" on a clock that legally
 starts at zero.

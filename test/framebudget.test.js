@@ -141,3 +141,80 @@ test('requestAnimationFrame is invoked with the browser global as receiver', () 
     else delete globalThis.cancelAnimationFrame;
   }
 });
+
+/**
+ * A stand-in for matchMedia('(prefers-reduced-motion: reduce)') that can be
+ * flipped while a test runs, the way the operating system setting can.
+ * @param {boolean} matches
+ */
+function motionSetting(matches) {
+  const listeners = new Set();
+  const query = {
+    matches,
+    addEventListener: (_type, fn) => listeners.add(fn),
+    removeEventListener: (_type, fn) => listeners.delete(fn),
+  };
+  const g = /** @type {any} */ (globalThis);
+  const before = g.matchMedia;
+  g.matchMedia = () => query;
+  return {
+    set(value) {
+      query.matches = value;
+      for (const fn of [...listeners]) fn({ matches: value });
+    },
+    listening: () => listeners.size,
+    restore() {
+      g.matchMedia = before;
+    },
+  };
+}
+
+test('reduced motion holds minimal even when every frame is perfect', () => {
+  const setting = motionSetting(true);
+  try {
+    const fb = new FrameBudget({ target: 60 });
+    assert.equal(fb.tier, 'minimal');
+    run(fb, 16.7, 3000);
+    assert.equal(fb.tier, 'minimal', 'it used to climb back to full within seconds');
+    assert.equal(fb.report().missRate, 0, 'frames are still measured');
+  } finally {
+    setting.restore();
+  }
+});
+
+test('turning reduced motion on mid-session drops to minimal at once, and off lets it climb', () => {
+  const setting = motionSetting(false);
+  try {
+    const changes = [];
+    const fb = new FrameBudget({ target: 60, onTierChange: (t) => changes.push(t) });
+    let t = run(fb, 16.7, 200);
+    assert.equal(fb.tier, 'full');
+
+    setting.set(true);
+    assert.equal(fb.tier, 'minimal');
+    assert.deepEqual(changes, ['minimal']);
+    t = run(fb, 16.7, 2000, t);
+    assert.equal(fb.tier, 'minimal');
+
+    setting.set(false);
+    run(fb, 16.7, 2000, t);
+    assert.equal(fb.tier, 'full', 'measurement takes over again');
+
+    fb.stop();
+    assert.equal(setting.listening(), 0, 'stop() lets go of the listener');
+  } finally {
+    setting.restore();
+  }
+});
+
+test('respectReducedMotion: false leaves the tier to measurement', () => {
+  const setting = motionSetting(true);
+  try {
+    const fb = new FrameBudget({ target: 60, respectReducedMotion: false });
+    run(fb, 16.7, 300);
+    assert.equal(fb.tier, 'full');
+    assert.equal(fb.report().reducedMotion, true, 'it still reports what the user asked for');
+  } finally {
+    setting.restore();
+  }
+});
